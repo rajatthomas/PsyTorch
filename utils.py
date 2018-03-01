@@ -35,7 +35,7 @@ def read_mri(img_file):
     """
     Reads MRI nifti files using Nibabel
     :param img_file: nii or nii.gz file
-    :return:3D numpy ndarray
+    :return:3D numpy nd-array
     """
     return nib.load(img_file).get_data()
 
