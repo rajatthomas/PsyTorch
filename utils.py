@@ -2,7 +2,6 @@ import numpy as np
 import os
 import os.path as pth
 
-from glob import glob
 import nibabel as nib
 
 
@@ -25,10 +24,10 @@ def create_mri_patch(img_file, patch_dim=64, num_patches=100):
     corner_high = img_dim - patch_dim
 
     all_patches = np.zeros((num_patches, patch_dim, patch_dim, patch_dim))
-
     for patch_i in range(num_patches):
         cx, cy, cz = [np.random.random_integers(low=corner_low[i], high=corner_high[i]) for i in [0, 1, 2]]
-        all_patches[patch_i] = img[cx:patch_dim, cy:patch_dim, cz:patch_dim]
+        import pdb; pdb.set_trace()
+        all_patches[patch_i] = img[cx:cx+patch_dim, cy:cy+patch_dim, cz:cz+patch_dim]
 
     return all_patches
 
@@ -59,8 +58,11 @@ def create_patch_files(root_dir, anat_sub_dir='anat', anat_file='anat.nii.gz', p
         os.makedirs(dir_name)
 
     dirs = os.listdir(root_dir)
-    for d in dirs:
-        img_file = pth.join(d, anat_sub_dir, anat_file)
+
+    tot_patches = 0
+    num_dirs = len(dirs)
+    for idir, d in enumerate(dirs):
+        img_file = pth.join(root_dir, d, anat_sub_dir, anat_file)
         all_patches = create_mri_patch(img_file, patch_dim=patch_dim, num_patches=num_patches)
 
         if not os.path.exists(pth.join(dir_name, d)):
@@ -69,3 +71,10 @@ def create_patch_files(root_dir, anat_sub_dir='anat', anat_file='anat.nii.gz', p
         for patch_i in range(num_patches):
             patch_file = pth.join(dir_name, d, 'patch_'+str(patch_i)+'.npy')
             np.save(patch_file, all_patches[patch_i])
+
+        if idir%10 == 0:
+            print('Completed {0}% of {1} directories'.format(idir/num_dirs*100, num_dirs))
+
+        tot_patches += num_patches
+
+    return tot_patches
