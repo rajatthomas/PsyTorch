@@ -17,6 +17,8 @@ def create_mri_patch(img_file, patch_dim=64, num_patches=100):
     img = read_mri(img_file)
     img_dim = np.array(img.shape)
     if np.any(img_dim < patch_dim):
+        print('image shape -> {0}, patch_dim -> {1}'.format(img_dim, patch_dim))
+        print('image filename {}'.format(img_file))
         raise ValueError("Dimension of patch should be less than image")
 
     # Choose a random top corner
@@ -26,10 +28,10 @@ def create_mri_patch(img_file, patch_dim=64, num_patches=100):
     all_patches = np.zeros((num_patches, patch_dim, patch_dim, patch_dim))
     for patch_i in range(num_patches):
         cx, cy, cz = [np.random.random_integers(low=corner_low[i], high=corner_high[i]) for i in [0, 1, 2]]
-        import pdb; pdb.set_trace()
         all_patches[patch_i] = img[cx:cx+patch_dim, cy:cy+patch_dim, cz:cz+patch_dim]
 
     return all_patches
+
 
 def read_mri(img_file):
     """
@@ -57,11 +59,11 @@ def create_patch_files(root_dir, anat_sub_dir='anat', anat_file='anat.nii.gz', p
     if not os.path.exists(dir_name):
         os.makedirs(dir_name)
 
-    dirs = os.listdir(root_dir)
+    subj_dirs = sorted(os.listdir(pth.join(root_dir, 'ABIDE_orig')))
 
     tot_patches = 0
-    num_dirs = len(dirs)
-    for idir, d in enumerate(dirs):
+    num_dirs = len(subj_dirs)
+    for idir, d in enumerate(subj_dirs):
         img_file = pth.join(root_dir, d, anat_sub_dir, anat_file)
         all_patches = create_mri_patch(img_file, patch_dim=patch_dim, num_patches=num_patches)
 
@@ -72,8 +74,8 @@ def create_patch_files(root_dir, anat_sub_dir='anat', anat_file='anat.nii.gz', p
             patch_file = pth.join(dir_name, d, 'patch_'+str(patch_i)+'.npy')
             np.save(patch_file, all_patches[patch_i])
 
-        if idir%10 == 0:
-            print('Completed {0}% of {1} directories'.format(idir/num_dirs*100, num_dirs))
+        if idir % 10 == 0:
+            print('Completed {0:0.2f}% of {1} directories'.format(idir/num_dirs*100, num_dirs))
 
         tot_patches += num_patches
 
